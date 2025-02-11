@@ -1,19 +1,27 @@
 {% extends "base.html" %}
-{% block title%} {{ title }} {% endblock %}
-{% block content%}
+{% block title %} {{ title }} {% endblock %}
 
-<div class="container py-4 text-center">
+{% block content %}
+<!-- <div class="container py-1 text-center"> -->
+    <div class="full-width-header"></div>
+    <header class="d-flex justify-content-between align-items-center">
+        <h1>KICD Requisition System</h1>
+        <a href="{{ url_for('login') }}" class="get-started">Get Started</a>
+    </header>
 
-
-    {% if current_user.is_authenticated %}
-
-    <h1>Welcome {{ current_user.username }}</h1>
-    <a href="{{url_for('logout')}}">Logout</a>
-
-    {% else %}
-
-    <a href="{{url_for('login')}}">Sign in/Sign Up</a>
-    
-    {% endif %}
+    <div class="hero">
+        <div class="content">
+            {% if current_user.is_authenticated %}
+                <h2>Welcome, {{ current_user.username }}!</h2>
+                <p>Streamline your store requisition process with automated approval workflows.</p>
+                <a href="#" class="btn">Go to Dashboard</a>
+                <br>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            {% else %}
+                <h2>Automate Your Store Requisition</h2>
+                <p>Sign in to request and manage store checkouts seamlessly.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

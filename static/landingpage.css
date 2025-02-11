@@ -1,0 +1,94 @@
+/* Reset default margins and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Full-width layout */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e3f2fd; /* Light blue background */
+    color: #0d47a1; /* Dark blue text */
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Header styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: #1565c0; /* Blue header */
+    color: white;
+    width: 100%;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Get Started button */
+.get-started {
+    text-decoration: none;
+    background-color: #1e88e5; /* Lighter blue button */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* Hero section without background color */
+.hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    width: 100%;
+    text-align: center;
+}
+
+.hero .content {
+    max-width: 600px;
+}
+
+/* Text and Buttons */
+.hero h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 18px;
+}
+
+.btn {
+    text-decoration: none;
+    background-color: #42a5f5; /* Sky blue button */
+    color: white;
+    padding: 12px 24px;
+    border-radius: 5px;
+    font-size: 18px;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.logout-btn {
+    text-decoration: none;
+    background-color: #d32f2f; /* Red logout button */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-top: 15px;
+    display: inline-block;
+}
+
+/* Make the page unscrollable */
+html, body {
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Disable scrolling */
+    margin: 0; /* Remove default margins */
+    padding: 0; /* Remove default padding */
+}
