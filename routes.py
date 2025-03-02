@@ -31,8 +31,8 @@ from flask_login import (
 
 from app import create_app,db,login_manager,bcrypt
 from models import User
-from forms import *
-
+from forms import login_form,register_form,OfficeDetailsForm,ItemsForm,ApprovalForm
+from pdf import generate_pdf
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -187,26 +187,9 @@ def step3():
 
 # PDF Generation Route
 @app.route('/pdf/<int:req_id>')
-def generate_pdf(req_id):
-    requisition = Requisition.query.get_or_404(req_id)
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-
-    pdf.drawString(100, 800, f"KICD Requisition Form")
-    pdf.drawString(100, 780, f"Office Name: {requisition.office_name}")
-    pdf.drawString(100, 760, f"Requested By: {requisition.requested_by}")
-
-    y_position = 740
-    pdf.drawString(100, y_position, "Items Requested:")
-    for item in requisition.items:
-        y_position -= 20
-        pdf.drawString(120, y_position, f"{item.item_name} - {item.quantity} {item.unit}")
-
-    pdf.drawString(100, y_position - 40, f"Approval: {requisition.approvals[0].approver_name} ({requisition.approvals[0].role}) - {requisition.approvals[0].status}")
-
-    pdf.save()
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="requisition.pdf", mimetype="application/pdf")
+def create_pdf(req_id):
+    generate_pdf(req_id)
+    return redirect(url_for('index'))
 
 @app.route('/update_status/<int:req_id>/<status>', methods=['POST'])
 def update_status(req_id, status):
