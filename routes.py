@@ -31,7 +31,7 @@ from flask_login import (
 
 from app import create_app,db,login_manager,bcrypt
 from models import User
-from forms import login_form,register_form
+from forms import *
 
 
 @login_manager.user_loader
@@ -125,6 +125,114 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+# Routes for Step-wise Form Handling
+@app.route('/step1', methods=['GET', 'POST'])
+def step1():
+    form = OfficeDetailsForm()
+    if form.validate_on_submit():
+        session['office_details'] = {
+            'office_name': form.office_name.data,
+            'requested_by': form.requested_by.data
+        }
+        return redirect(url_for('step2'))
+    return render_template('step1.html', form=form)
+
+@app.route('/step2', methods=['GET', 'POST'])
+def step2():
+    form = ItemsForm()
+    if form.validate_on_submit():
+        session['items'] = [{'item_name': item.item_name.data, 'unit': item.unit.data, 'quantity': item.quantity.data, 'remarks': item.remarks.data} for item in form.items]
+        return redirect(url_for('step3'))
+    return render_template('step2.html', form=form)
+
+@app.route('/step3', methods=['GET', 'POST'])
+def step3():
+    form = ApprovalForm()
+    if form.validate_on_submit():
+        session['approval'] = {
+            'approver_name': form.approver_name.data,
+            'role': form.role.data,
+            'status': form.status.data
+        }
+
+        # Save data to database
+        requisition = Requisition(
+            office_name=session['office_details']['office_name'],
+            requested_by=session['office_details']['requested_by']
+        )
+        db.session.add(requisition)
+        db.session.commit()
+
+        for item in session['items']:
+            db.session.add(RequisitionItems(
+                requisition_id=requisition.id,
+                item_name=item['item_name'],
+                unit=item['unit'],
+                quantity=item['quantity'],
+                remarks=item['remarks']
+            ))
+
+        db.session.add(Approval(
+            requisition_id=requisition.id,
+            approver_name=session['approval']['approver_name'],
+            role=session['approval']['role'],
+            status=session['approval']['status']
+        ))
+
+        db.session.commit()
+
+        return redirect(url_for('generate_pdf', req_id=requisition.id))
+    return render_template('step3.html', form=form)
+
+# PDF Generation Route
+@app.route('/pdf/<int:req_id>')
+def generate_pdf(req_id):
+    requisition = Requisition.query.get_or_404(req_id)
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+
+    pdf.drawString(100, 800, f"KICD Requisition Form")
+    pdf.drawString(100, 780, f"Office Name: {requisition.office_name}")
+    pdf.drawString(100, 760, f"Requested By: {requisition.requested_by}")
+
+    y_position = 740
+    pdf.drawString(100, y_position, "Items Requested:")
+    for item in requisition.items:
+        y_position -= 20
+        pdf.drawString(120, y_position, f"{item.item_name} - {item.quantity} {item.unit}")
+
+    pdf.drawString(100, y_position - 40, f"Approval: {requisition.approvals[0].approver_name} ({requisition.approvals[0].role}) - {requisition.approvals[0].status}")
+
+    pdf.save()
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name="requisition.pdf", mimetype="application/pdf")
+
+@app.route('/update_status/<int:req_id>/<status>', methods=['POST'])
+def update_status(req_id, status):
+    requisition = Requisition.query.get_or_404(req_id)
+    requisition.status = status
+    db.session.commit()
+
+    # Notify user about status update
+    subject = "Requisition Status Update"
+    body = f"""
+    Hello {requisition.requested_by},
+
+    Your requisition status has been updated.
+
+    - Office: {requisition.office_name}
+    - Status: {status}
+
+    Thank you for using the KICD Requisition System.
+
+    Regards,
+    KICD Requisition System
+    """
+    send_email(requisition, io.BytesIO(), subject, body, [requisition.user_email])
+
+    return jsonify({'message': 'Status updated and email sent.'}), 200
+
 
 
 if __name__ == "__main__":
