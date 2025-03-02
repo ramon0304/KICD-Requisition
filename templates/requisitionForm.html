@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card p-4">
+    <h3 class="text-center">KICD Requisition Form</h3>
+
+    <!-- Step Indicators -->
+    <div class="d-flex justify-content-between mb-4">
+        <span class="step-indicator">Step 1: Request Details</span>
+        <span class="step-indicator">Step 2: Add Items</span>
+        <span class="step-indicator">Step 3: Review & Submit</span>
+    </div>
+
+    <form id="requisitionForm">
+        <!-- Step 1 -->
+        <div id="step1">
+            <div class="mb-3">
+                <label class="form-label">Office Name</label>
+                <input type="text" class="form-control" name="office_name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Requested By</label>
+                <input type="text" class="form-control" name="requested_by" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="user_email" required>
+            </div>
+            <button type="button" class="btn btn-primary w-100" onclick="nextStep(1)">Next</button>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="step2" style="display: none;">
+            <div class="mb-3">
+                <label class="form-label">Item Name</label>
+                <input type="text" class="form-control" id="item_name">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity">
+            </div>
+            <button type="button" class="btn btn-secondary w-100" onclick="prevStep(2)">Back</button>
+            <button type="button" class="btn btn-primary w-100 mt-2" onclick="nextStep(2)">Next</button>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="step3" style="display: none;">
+            <h5>Review Your Submission</h5>
+            <p><strong>Office:</strong> <span id="review_office"></span></p>
+            <p><strong>Requested By:</strong> <span id="review_name"></span></p>
+            <p><strong>Email:</strong> <span id="review_email"></span></p>
+            <button type="button" class="btn btn-secondary w-100" onclick="prevStep(3)">Back</button>
+            <button type="submit" class="btn btn-success w-100 mt-2">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentStep = 1;
+
+    function nextStep(step) {
+        document.getElementById(`step${step}`).style.display = "none";
+        document.getElementById(`step${step + 1}`).style.display = "block";
+
+        if (step === 2) {
+            document.getElementById("review_office").textContent = document.querySelector("[name='office_name']").value;
+            document.getElementById("review_name").textContent = document.querySelector("[name='requested_by']").value;
+            document.getElementById("review_email").textContent = document.querySelector("[name='user_email']").value;
+        }
+    }
+
+    function prevStep(step) {
+        document.getElementById(`step${step}`).style.display = "none";
+        document.getElementById(`step${step - 1}`).style.display = "block";
+    }
+</script>
+{% endblock %}
