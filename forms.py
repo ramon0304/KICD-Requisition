@@ -5,10 +5,14 @@ from wtforms import (
     IntegerField,
     DateField,
     TextAreaField,
+    SelectField,
+    SubmitField,
+    FieldList,
+    FormField
 )
 
 from flask_wtf import FlaskForm
-from wtforms.validators import InputRequired, Length, EqualTo, Email, Regexp ,Optional
+from wtforms.validators import InputRequired, Length, EqualTo, Email, Regexp ,Optional, DataRequired
 import email_validator
 from flask_login import current_user
 from wtforms import ValidationError,validators
@@ -54,3 +58,25 @@ class register_form(FlaskForm):
     def validate_uname(self, uname):
         if User.query.filter_by(username=username.data).first():
             raise ValidationError("Username already taken!")
+
+class OfficeDetailsForm(FlaskForm):
+    office_name = StringField("Office Name", validators=[DataRequired()])
+    requested_by = StringField("Requested By", validators=[DataRequired()])
+    user_email = EmailField("Your Email", validators=[DataRequired(), Email()])
+    next = SubmitField("Next")
+
+class ItemForm(FlaskForm):
+    item_name = StringField("Item Name", validators=[DataRequired()])
+    unit = SelectField("Unit of Issue", choices=[('500ml', '500ml'), ('20L', '20L'), ('300ml', '300ml')], validators=[DataRequired()])
+    quantity = IntegerField("Quantity", validators=[DataRequired()])
+    remarks = StringField("Remarks")
+    
+class ItemsForm(FlaskForm):
+    items = FieldList(FormField(ItemForm), min_entries=1)
+    next = SubmitField("Next")
+
+class ApprovalForm(FlaskForm):
+    approver_name = StringField("Approver Name", validators=[DataRequired()])
+    role = SelectField("Role", choices=[('Head of Division', 'Head of Division'), ('DDA', 'DDA'), ('DDFA', 'DDFA')], validators=[DataRequired()])
+    status = SelectField("Status", choices=[('Approved', 'Approved'), ('Not Approved', 'Not Approved')], validators=[DataRequired()])
+    next = SubmitField("Submit")
