@@ -8,7 +8,8 @@ from wtforms import (
     SelectField,
     SubmitField,
     FieldList,
-    FormField
+    FormField,
+    EmailField,
 )
 
 from flask_wtf import FlaskForm
