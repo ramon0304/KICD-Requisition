@@ -36,27 +36,59 @@
         <!-- Floating Labels -->
         {% if request.path == '/register/' %}
         <div class="form-floating mb-3">
-          {{ form.username(class_="form-control", id="username", placeholder="Username") }}
+          {{ form.username(class_="form-control" + (" is-invalid" if form.username.errors else ""), id="username",
+          placeholder="Username") }}
           <label for="username">Username</label>
+          {% if form.username.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.username.errors %}
+            <span>{{ error }}</span><br>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
         {% endif %}
 
         <div class="form-floating mb-3">
-          {{ form.email(class_="form-control", id="email", placeholder="Email") }}
+          {{ form.email(class_="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="Email")
+          }}
           <label for="email">Email</label>
+          {% if form.email.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.email.errors %}
+            <span>{{ error }}</span><br>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
 
-        <div class="form-floating mb-3">
-          {{ form.pwd(class_="form-control", id="password", placeholder="Password") }}
-          <label for="password">Password</label>
-        </div>
+          <div class="form-floating mb-3">
+            {{ form.pwd(class_="form-control" + (" is-invalid" if form.pwd.errors else ""), id="password", placeholder="Password")
+            }}
+            <label for="password">Password</label>
+            {% if form.pwd.errors %}
+            <div class="invalid-feedback">
+              {% for error in form.pwd.errors %}
+              <span>{{ error }}</span><br>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
 
-        {% if request.path == '/register/' %}
-        <div class="form-floating mb-3">
-          {{ form.cpwd(class_="form-control", id="confirm_password", placeholder="Confirm Password") }}
-          <label for="confirm_password">Confirm Password</label>
-        </div>
-        {% endif %}
+          {% if request.path == '/register/' %}
+          <div class="form-floating mb-3">
+            {{ form.cpwd(class_="form-control" + (" is-invalid" if form.cpwd.errors else ""), id="confirm_password",
+            placeholder="Confirm Password") }}
+            <label for="confirm_password">Confirm Password</label>
+            {% if form.cpwd.errors %}
+            <div class="invalid-feedback">
+              {% for error in form.cpwd.errors %}
+              <span>{{ error }}</span><br>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
 
         <!-- Submit Button -->
         <div class="text-center">
