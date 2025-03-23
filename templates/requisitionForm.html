@@ -15,7 +15,7 @@
         <span class="step-indicator mx-2 px-3 py-1 rounded bg-light text-dark">Step 3: Review & Submit</span>
     </div>
 
-    <form id="requisitionForm" action="/submit-requisition" method="post" onsubmit="submitForm(event)">
+    <form id="requisitionForm" action="/submit-requisition" method="post" onsubmit="submitForm(event)" novalidate>
         <!-- Step 1 -->
         <div id="step1">
             <div class="mb-3">
@@ -43,13 +43,13 @@
             <div class="mb-3">
                 <label for="item_name" class="form-label">Item Name</label>
                 <input type="text" class="form-control custom-input" id="item_name" name="item_name" required
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of the item.">
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of the item." >
                 <div class="invalid-feedback">Please enter the item name.</div>
             </div>
             <div class="mb-3">
                 <label for="quantity" class="form-label">Quantity</label>
                 <input type="number" class="form-control custom-input" id="quantity" name="quantity" required min="1"
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter a valid quantity (minimum 1).">
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter a valid quantity (minimum 1)." >
                 <div class="invalid-feedback">Please enter a valid quantity (minimum 1).</div>
             </div>
             <button type="button" class="btn btn-secondary btn-sm" onclick="addItem()">Add Item</button>
@@ -100,7 +100,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary" id="confirmSubmitBtn">Submit</button>
             </div>
         </div>
     </div>
