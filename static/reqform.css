@@ -1,0 +1,46 @@
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-input {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+
+    .custom-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+    }
+
+    .step-indicator {
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 5px 10px;
+        background-color: #f8f9fa;
+    }
+
+    .step-indicator.active {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 5px;
+    }
+
+    .progress-bar {
+        background-color: #0d6efd;
+    }
+
+    button {
+        border-radius: 8px;
+        margin: 0 5px;
+    }
+
+    #submitBtn {
+        background-color: #28a745;
+    }

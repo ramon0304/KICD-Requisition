@@ -61,6 +61,7 @@ A Flask-based web application to automate the requisition process for the **KICD
 6. **Run the app:**
    ```bash
    flask run
+   ./run
    ```
 
 ---
@@ -112,11 +113,6 @@ A Flask-based web application to automate the requisition process for the **KICD
 
 ---
 
-## **Screenshots 📸**
-*(Add screenshots of the multi-step form, PDF preview, and approval page here.)*  
-
----
-
 ## **Future Enhancements 🌱**
 - **Role-Based Access:** Admin and Approver roles.  
 - **Digital Signatures:** Capture approvers’ signatures.  
@@ -130,11 +126,6 @@ A Flask-based web application to automate the requisition process for the **KICD
 3. Commit your changes: `git commit -m 'Add new feature'`.  
 4. Push to the branch: `git push origin feature/your-feature`.  
 5. Open a Pull Request.  
-
----
-
-## **License 📄**
-This project is licensed under the **MIT License**.  
 
 ---
 

@@ -216,6 +216,103 @@ def update_status(req_id, status):
 
     return jsonify({'message': 'Status updated and email sent.'}), 200
 
+def send_email(requisition, pdf_buffer, subject, body, recipients):
+    msg = Message(subject, recipients=recipients)
+    msg.body = body
+    pdf_buffer.seek(0)
+    msg.attach("requisition.pdf", "application/pdf", pdf_buffer.read())
+    try:
+        mail.send(msg)
+        print("Email sent successfully.")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+# Route to handle the final submission of the requisition form
+@app.route('/submit-requisition', methods=['POST'])
+def submit_requisition():
+    # Ensure required session data exists
+    if not all(k in session for k in ('office_details', 'items', 'approval')):
+        flash("Session expired. Please restart your requisition form.", "danger")
+        return redirect(url_for('step1'))
+    
+    # Create the Requisition record using session data
+    requisition = Requisition(
+        office_name=session['office_details']['office_name'],
+        requested_by=session['office_details']['requested_by']
+        # If you store user_email in your model, add it here.
+    )
+    db.session.add(requisition)
+    db.session.commit()
+
+    # Save each item into RequisitionItems
+    for item in session['items']:
+        db.session.add(RequisitionItems(
+            requisition_id=requisition.id,
+            item_name=item['item_name'],
+            unit=item['unit'],
+            quantity=item['quantity'],
+            remarks=item['remarks']
+        ))
+    
+    # Save the approval details into Approval
+    db.session.add(Approval(
+        requisition_id=requisition.id,
+        approver_name=session['approval']['approver_name'],
+        role=session['approval']['role'],
+        status=session['approval']['status']
+    ))
+    db.session.commit()
+
+    # Generate the PDF for this requisition.
+    # Our generate_pdf function is expected to create a PDF file (e.g., "pdfs/requisition_<id>.pdf")
+    generate_pdf(requisition.id)
+    
+    # Load the generated PDF into a BytesIO buffer for email attachment.
+    pdf_path = f"pdfs/requisition_{requisition.id}.pdf"
+    if not os.path.exists(pdf_path):
+        flash("Failed to generate PDF.", "danger")
+        return redirect(url_for('step3'))
+    
+    pdf_buffer = io.BytesIO()
+    with open(pdf_path, "rb") as f:
+        pdf_buffer.write(f.read())
+    pdf_buffer.seek(0)
+    
+    # Prepare email content
+    subject = "KICD Requisition Submitted"
+    body = f"""Hello {requisition.requested_by},
+
+Your requisition has been submitted successfully.
+Please find the attached PDF for your records.
+
+Thank you for using the KICD Requisition System.
+"""
+    # For example, you might send the email to the requester and/or approvers.
+    # Here, we'll send it to the requester's email if you store it in your model or session.
+    recipient_list = [session.get('office_details').get('requested_by')]  # Replace with actual email retrieval
+    # If your model includes user_email, you can do: [requisition.user_email]
+    
+    # Send the email
+    send_email(requisition, pdf_buffer, subject, body, recipient_list)
+    
+    # Optionally, remove the temporary PDF file if not needed
+    try:
+        os.remove(pdf_path)
+    except Exception as e:
+        print(f"Could not remove PDF file: {e}")
+    
+    # Clear the session data related to the form
+    session.pop('office_details', None)
+    session.pop('items', None)
+    session.pop('approval', None)
+    
+    # Redirect to a thank-you page
+    return redirect(url_for('thank_you'))
+
+# Thank-you page route (if not already defined)
+@app.route('/thank-you')
+def thank_you():
+    return render_template("thank_you.html", title="Thank You")
 
 
 if __name__ == "__main__":

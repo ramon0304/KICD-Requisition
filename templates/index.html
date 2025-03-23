@@ -10,7 +10,7 @@
         <div class="d-flex justify-content-end align-items-center" style="gap: 20px;">
             <h4 style="margin: 0;">Welcome, {{ current_user.username }}</h4>
             <div style="padding-bottom: 15px;">
-                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                <a href="{{ url_for('logout') }}" class="logout-btn btn-md">Logout</a>
             </div>
         </div>
         {% else %}
@@ -20,15 +20,62 @@
     </header>
 
 
-    <div class="hero">
-        <div class="content">
+   <!-- Hero Section -->
+    <div class="hero d-flex align-items-center justify-content-center text-center" style="min-height: 70vh;">>
+        <div class="container">
             {% if current_user.is_authenticated %}
+                <!-- Include Requisition Form -->
                 {% include "requisitionForm.html" %}
             {% else %}
-                <h2>Automate Your Store Requisition</h2>
-                <p>Sign in to request and manage store checkouts seamlessly.</p>
+                <!-- Unauthenticated User Content -->
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="display-5 mb-3">Automate Your Store Requisition</h2>
+                        <p class="lead mb-4">
+                            Streamline your store operations with our easy-to-use requisition system. 
+                            Request items, track approvals, and manage inventory seamlessly.
+                        </p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Sign In to Get Started</a>
+                    </div>
+                    <div class="col-md-6">
+                        <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==" alt="Requisition System Illustration" class="img-fluid rounded shadow">
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
+
+<!-- Footer Section -->
+<footer class="bg-light text-dark text-center py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5 class="mb-3">About Us</h5>
+                <p class="text-muted">
+                    We provide innovative solutions to streamline store requisitions and inventory management.
+                </p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="mb-3">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-dark">Home</a></li>
+                    <li><a href="#" class="text-dark">Features</a></li>
+                    <li><a href="#" class="text-dark">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="mb-3">Contact Info</h5>
+                <ul class="list-unstyled">
+                    <li class="text-muted">Email: support@kicd.com</li>
+                    <li class="text-muted">Phone: +254 700 123 456</li>
+                    <li class="text-muted">Address: Nairobi, Kenya</li>
+                </ul>
+            </div>
+        </div>
+        <hr class="bg-secondary">
+        <p class="mb-0 text-muted">&copy; 2025 KICD Requisition System. All rights reserved.</p>
+    </div>
+</footer>
+
 </div>
 {% endblock %}
