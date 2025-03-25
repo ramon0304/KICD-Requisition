@@ -2,3 +2,8 @@
 *.db
 venv4
 /venv
+/migrations
+/.vscode
+database.db
+database.db-shm
+database.db-wal
