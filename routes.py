@@ -123,46 +123,70 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 # Route to handle form submission
 @app.route("/submit-requisition", methods=["POST"])
-@login_required  # Ensure only logged-in users can submit the form
+@login_required
 def submit_requisition():
     try:
-        # Extract form data
-        office_name = request.form.get("office_name")
-        requested_by = request.form.get("requested_by")
-        user_email = request.form.get("user_email")
-        items = request.form.getlist("items[]")  # Assuming items are sent as a list
+        # Check if request is JSON
+        if request.is_json:
+            data = request.get_json()
+            office_name = data.get("office_name")
+            requested_by = data.get("requested_by")
+            user_email = data.get("user_email")
+            items = data.get("items", [])
+        else:
+            # Fall back to form data
+            office_name = request.form.get("office_name")
+            requested_by = request.form.get("requested_by")
+            user_email = request.form.get("user_email")
+            items = request.form.getlist("items[]")
 
         # Validate required fields
-        if not office_name or not requested_by or not user_email:
-            return jsonify({"message": "Missing required fields"}), 400
+        if not all([office_name, requested_by, user_email]):
+            return jsonify({
+                "status": "error",
+                "message": "Missing required fields"
+            }), 400
 
-        # Validate email format (optional)
+        # Validate email
         if not validate_email(user_email):
-            return jsonify({"message": "Invalid email address"}), 400
+            return jsonify({
+                "status": "error",
+                "message": "Invalid email address"
+            }), 400
 
-        # Process items (if any)
+        # Validate items
         if not items:
-            return jsonify({"message": "No items provided"}), 400
+            return jsonify({
+                "status": "error",
+                "message": "No items provided"
+            }), 400
 
-        # Example: Save data to a database or perform other actions
-        # Here, we're just printing the data for demonstration
-        print(f"Office Name: {office_name}")
-        print(f"Requested By: {requested_by}")
-        print(f"User Email: {user_email}")
-        print("Items:")
-        for item in items:
-            print(f"- {item}")
-
+        # Process the data (replace with your actual logic)
+        print(f"Processing requisition from {office_name}")
+        
         # Return success response
-        return jsonify({"message": "Requisition submitted successfully!"}), 200
+        return jsonify({
+            "status": "success",
+            "message": "Requisition submitted successfully!",
+            "data": {
+                "office": office_name,
+                "requester": requested_by,
+                "email": user_email,
+                "items_count": len(items)
+            }
+        }), 200
 
     except Exception as e:
-        # Handle any unexpected errors
-        print(f"Error: {e}")
-        return jsonify({"message": "An error occurred while processing your request"}), 500
-
+        app.logger.error(f"Requisition submission error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "An internal server error occurred"
+        }), 500
+    
+    
 # Helper function to validate email
 def validate_email(email):
     import re

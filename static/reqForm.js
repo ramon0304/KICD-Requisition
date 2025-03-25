@@ -65,43 +65,67 @@ function updateItemList() {
 
 // Form submission
 async function submitForm(event) {
-    event.preventDefault(); // Prevent default form submission
-
+    event.preventDefault();
     const modal = new bootstrap.Modal(document.getElementById("confirmationModal"));
     modal.show();
 
-    // Handle modal submission
     document.getElementById("confirmSubmitBtn").addEventListener("click", async () => {
         const form = document.getElementById("requisitionForm");
         const submitBtn = document.getElementById("submitBtn");
-        const formData = new FormData(form);
+        
+        // Convert form data to JSON
+        const formData = {
+            office_name: form.office_name.value,
+            requested_by: form.requested_by.value,
+            user_email: form.user_email.value,
+            items: items // Your existing items array
+        };
 
         submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`;
         submitBtn.disabled = true;
 
         try {
             const response = await fetch(form.action, {
-                method: form.method || "POST",
-                body: formData
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                alert(result.message || "Form submitted successfully!");
-                clearForm();
-            } else {
-                const errorData = await response.json();
-                alert(errorData.message || "Submission failed. Please try again.");
+            // Handle non-JSON responses (like redirects)
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("Please login to submit the form");
+                }
+                const text = await response.text();
+                throw new Error(`Unexpected response: ${text.substring(0, 100)}`);
             }
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Submission failed");
+            }
+
+            alert(result.message);
+            clearForm();
         } catch (error) {
-            alert("An error occurred. Please try again.");
-            console.error("Error:", error);
+            console.error("Submission error:", error);
+            alert(error.message || "An error occurred during submission");
+            
+            // Redirect to login if unauthorized
+            if (error.message.includes("login")) {
+                window.location.href = "/login/";
+            }
         } finally {
             submitBtn.innerHTML = "Submit";
             submitBtn.disabled = false;
             modal.hide();
         }
-    });
+    }, { once: true });
 }
 
 // Clear form
