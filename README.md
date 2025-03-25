@@ -133,7 +133,3 @@ A Flask-based web application to automate the requisition process for the **KICD
 ## User1
 - Email: test@test.com
 - Password: test1234
-
-## User 2
-- Email : ramon@gmail.com
-- Password: Ramon1234
