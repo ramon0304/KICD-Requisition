@@ -31,7 +31,8 @@ from flask_login import (
 )
 
 from app import create_app, db, login_manager, bcrypt
-from models import User
+from datetime import datetime
+from models import User, Requisition, RequisitionItems, Approval  
 from forms import login_form, register_form, OfficeDetailsForm, ItemsForm, ApprovalForm
 from pdf import generate_pdf
 
@@ -128,65 +129,116 @@ def logout():
 @app.route("/submit-requisition", methods=["POST"])
 @login_required
 def submit_requisition():
-    try:
-        # Check if request is JSON
-        if request.is_json:
-            data = request.get_json()
-            office_name = data.get("office_name")
-            requested_by = data.get("requested_by")
-            user_email = data.get("user_email")
-            items = data.get("items", [])
-        else:
-            # Fall back to form data
-            office_name = request.form.get("office_name")
-            requested_by = request.form.get("requested_by")
-            user_email = request.form.get("user_email")
-            items = request.form.getlist("items[]")
+    # Ensure we're getting JSON data
+    if not request.is_json:
+        return jsonify({
+            "status": "error",
+            "message": "Request must be JSON"
+        }), 400
 
+    try:
+        data = request.get_json()
+        current_user_obj = User.query.get(int(current_user.get_id()))
+        
         # Validate required fields
-        if not all([office_name, requested_by, user_email]):
+        required_fields = ['office_name', 'requested_by', 'user_email', 'items']
+        if not all(field in data for field in required_fields):
             return jsonify({
                 "status": "error",
                 "message": "Missing required fields"
             }), 400
 
         # Validate email
-        if not validate_email(user_email):
+        if not validate_email(data['user_email']):
             return jsonify({
                 "status": "error",
                 "message": "Invalid email address"
             }), 400
 
         # Validate items
-        if not items:
+        if not data['items'] or len(data['items']) == 0:
             return jsonify({
                 "status": "error",
                 "message": "No items provided"
             }), 400
 
-        # Process the data (replace with your actual logic)
-        print(f"Processing requisition from {office_name}")
-        
-        # Return success response
+        # Create new requisition
+        new_requisition = Requisition(
+            office_name=data['office_name'],
+            requested_by=data['requested_by'],
+            user_email=data['user_email'],
+            status="Pending"
+        )
+        db.session.add(new_requisition)
+        db.session.flush()
+
+        # Add items
+        for item in data['items']:
+            new_item = RequisitionItems(
+                requisition_id=new_requisition.id,
+                item_name=item.get('item_name'),
+                unit=item.get('unit', 'pieces'),
+                quantity=item.get('quantity', 1),
+                remarks=item.get('remarks', '')
+            )
+            db.session.add(new_item)
+
+        # Initial approval record
+        initial_approval = Approval(
+            requisition_id=new_requisition.id,
+            approver_name=current_user_obj.username,
+            role="Requester",
+            status="Submitted",
+            date_signed=datetime.utcnow()
+        )
+        db.session.add(initial_approval)
+
+        db.session.commit()
+
         return jsonify({
             "status": "success",
             "message": "Requisition submitted successfully!",
-            "data": {
-                "office": office_name,
-                "requester": requested_by,
-                "email": user_email,
-                "items_count": len(items)
-            }
+            "requisition_id": new_requisition.id,
+            "redirect_url": url_for('view_requisitions')
         }), 200
 
+    except IntegrityError as e:
+        db.session.rollback()
+        app.logger.error(f"Integrity error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "Database integrity error"
+        }), 500
     except Exception as e:
+        db.session.rollback()
         app.logger.error(f"Requisition submission error: {str(e)}")
         return jsonify({
             "status": "error",
             "message": "An internal server error occurred"
         }), 500
+
+#Handling requisition views
+@app.route("/requisitions")
+@login_required
+def view_requisitions():
+    # Get requisitions for the current user
+    user_requisitions = Requisition.query.filter_by(user_email=current_user.email)\
+                                       .order_by(Requisition.date_created.desc())\
+                                       .all()
+    return render_template("requisitions.html", 
+                         requisitions=user_requisitions,
+                         title="My Requisitions")
+
+@app.route("/requisition/<int:req_id>")
+@login_required
+def requisition_detail(req_id):
+    # Get the specific requisition
+    requisition = Requisition.query.get_or_404(req_id)
     
-    
+    return render_template("requisition_detail.html", 
+                         requisition=requisition,
+                         title=f"Requisition #{requisition.id}")
+
 # Helper function to validate email
 def validate_email(email):
     import re

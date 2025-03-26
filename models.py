@@ -21,6 +21,7 @@ class Requisition(db.Model):
     requested_by = db.Column(db.String(100), nullable=False)
     user_email = db.Column(db.String(100), nullable=False)  # New field for user email
     status = db.Column(db.String(20), default="Pending")  # Status tracking
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship('RequisitionItems', backref='requisition', lazy=True)
     approvals = db.relationship('Approval', backref='requisition', lazy=True)

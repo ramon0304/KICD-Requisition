@@ -21,20 +21,19 @@
             <div class="mb-3">
                 <label for="office_name" class="form-label">Office Name</label>
                 <input type="text" class="form-control custom-input" id="office_name" name="office_name" required
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of your office.">
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of your office." placeholder="Naceece Hotel">
                 <div class="invalid-feedback">Please enter the office name.</div>
             </div>
             <div class="mb-3">
                 <label for="requested_by" class="form-label">Requested By</label>
                 <input type="text" class="form-control custom-input" id="requested_by" name="requested_by" required
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter your full name.">
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter your full name." placeholder="John Doe">
                 <div class="invalid-feedback">Please enter your name.</div>
             </div>
             <div class="mb-3">
                 <label for="user_email" class="form-label">Email</label>
-                <input type="email" class="form-control custom-input" id="user_email" name="user_email" required
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter a valid email address.">
-                <div class="invalid-feedback">Please enter a valid email address.</div>
+                <input type="email" class="form-control custom-input" id="user_email" name="user_email" value="{{ current_user.email }}" 
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter a valid email address." placeholder="{{ current_user.email }}" readonly>
             </div>
         </div>
 
@@ -43,7 +42,7 @@
             <div class="mb-3">
                 <label for="item_name" class="form-label">Item Name</label>
                 <input type="text" class="form-control custom-input" id="item_name" name="item_name" required
-                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of the item." >
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Enter the name of the item." placeholder="Paper Clips (Boxes))">
                 <div class="invalid-feedback">Please enter the item name.</div>
             </div>
             <div class="mb-3">

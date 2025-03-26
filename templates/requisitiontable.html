@@ -1,0 +1,144 @@
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">My Requisitions</h3>
+                <a href="{{ url_for('index') }}" class="btn btn-light">
+                    <i class="fas fa-plus"></i> New Requisition
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if requisitions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">Req #</th>
+                            <th scope="col">Office</th>
+                            <th scope="col">Requested By</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requisitions %}
+                        <tr>
+                            <th scope="row">{{ req.id }}</th>
+                            <td>{{ req.office_name }}</td>
+                            <td>{{ req.requested_by }}</td>
+                            <td>{{ req.date_created.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if req.status == 'Approved' %}bg-success
+                                    {% elif req.status == 'Rejected' %}bg-danger
+                                    {% elif req.status == 'Pending' %}bg-warning text-dark
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ req.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('requisition_detail', req_id=req.id) }}" 
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if req.status == 'Pending' %}
+                                <a href="#" class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                <a href="#" class="btn btn-sm btn-outline-info" title="Print">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <nav aria-label="Requisitions pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Requisitions Found</h4>
+                <p class="text-muted">You haven't submitted any requisitions yet.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus"></i> Create New Requisition
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="card-footer bg-light">
+            <small class="text-muted">
+                Showing {{ requisitions|length }} requisition(s)
+            </small>
+        </div>
+    </div>
+</div>
+
+{% block styles %}
+<style>
+    .card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .empty-state {
+        opacity: 0.6;
+    }
+    
+    @media (max-width: 768px) {
+        .table-responsive {
+            border: none;
+        }
+        
+        .card-header h3 {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -20,15 +20,6 @@ document.getElementById("requested_by").addEventListener("blur", () => {
     }
 });
 
-document.getElementById("user_email").addEventListener("blur", () => {
-    const email = document.getElementById("user_email").value.trim();
-    if (!validateEmail(email)) {
-        document.getElementById("user_email").classList.add("is-invalid");
-    } else {
-        document.getElementById("user_email").classList.remove("is-invalid");
-    }
-});
-
 // Add items dynamically
 function addItem() {
     const itemName = document.getElementById("item_name").value.trim();
@@ -73,35 +64,42 @@ async function submitForm(event) {
         const form = document.getElementById("requisitionForm");
         const submitBtn = document.getElementById("submitBtn");
         
-        // Convert form data to JSON
-        const formData = {
-            office_name: form.office_name.value,
-            requested_by: form.requested_by.value,
-            user_email: form.user_email.value,
-            items: items // Your existing items array
+        // Prepare proper JSON data structure
+        const jsonData = {
+            office_name: form.office_name.value.trim(),
+            requested_by: form.requested_by.value.trim(),
+            user_email: form.user_email.value.trim(),
+            items: items.map(item => ({
+                item_name: item.itemName,
+                quantity: item.quantity,
+                unit: item.unit || "pieces",
+                remarks: item.remarks || ""
+            }))
         };
 
         submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`;
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch(form.action, {
+            const response = await fetch("/submit-requisition", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(jsonData)
             });
 
-            // Handle non-JSON responses (like redirects)
+            // First check if response is JSON
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                if (response.status === 401 || response.status === 403) {
-                    throw new Error("Please login to submit the form");
+                // Handle non-JSON responses (like redirects)
+                if (response.status === 401) {
+                    window.location.href = "/login";
+                    return;
                 }
                 const text = await response.text();
-                throw new Error(`Unexpected response: ${text.substring(0, 100)}`);
+                throw new Error(`Server returned: ${text.substring(0, 100)}`);
             }
 
             const result = await response.json();
@@ -110,16 +108,19 @@ async function submitForm(event) {
                 throw new Error(result.message || "Submission failed");
             }
 
-            alert(result.message);
-            clearForm();
+            // Success - redirect to requisitions page
+            window.location.href = "/requisitions";
+            
         } catch (error) {
             console.error("Submission error:", error);
-            alert(error.message || "An error occurred during submission");
             
-            // Redirect to login if unauthorized
-            if (error.message.includes("login")) {
-                window.location.href = "/login/";
+            // Show user-friendly error message
+            let errorMessage = error.message;
+            if (error.message.includes("<!doctype html>")) {
+                errorMessage = "Your session may have expired. Please logout and try again.";
             }
+            
+            alert(`Error: ${errorMessage}`);
         } finally {
             submitBtn.innerHTML = "Submit";
             submitBtn.disabled = false;

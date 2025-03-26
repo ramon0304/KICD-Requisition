@@ -1,0 +1,58 @@
+<div class="container px-0 px-sm-2 mt-2">  <!-- Reduced horizontal padding -->
+    <div class="card border-0 shadow-sm">  <!-- Removed default card border -->
+        <div class="card-header bg-primary text-white py-2">  <!-- Reduced header padding -->
+            <h3 class="mb-0 fs-4">Requisition #{{ requisition.id }}</h3>  <!-- Smaller font size -->
+        </div>
+        <div class="card-body p-3">  <!-- Reduced body padding -->
+            <div class="row g-2 mb-2">  <!-- Reduced gutter and margin -->
+                <div class="col-md-4">
+                    <h5 class="fs-6 mb-1">Office:</h5>  <!-- Smaller heading -->
+                    <p class="mb-0">{{ requisition.office_name }}</p>  <!-- Removed paragraph margin -->
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fs-6 mb-1">Requested By:</h5>
+                    <p class="mb-0">{{ requisition.requested_by }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fs-6 mb-1">Status:</h5>
+                    <span class="badge 
+                        {% if requisition.status == 'Approved' %}bg-success
+                        {% elif requisition.status == 'Rejected' %}bg-danger
+                        {% else %}bg-warning{% endif %}">
+                        {{ requisition.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <h4 class="fs-5 mt-3 mb-2">Items Requested</h4>  <!-- Smaller heading with tighter spacing -->
+            <div class="table-responsive">
+                <table class="table table-sm">  <!-- Smaller table -->
+                    <thead>
+                        <tr>
+                            <th class="py-1">Item</th>  <!-- Reduced cell padding -->
+                            <th class="py-1">Quantity</th>
+                            <th class="py-1">Unit</th>
+                            <th class="py-1">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in requisition.items %}
+                        <tr>
+                            <td class="py-1">{{ item.item_name }}</td>
+                            <td class="py-1">{{ item.quantity }}</td>
+                            <td class="py-1">{{ item.unit }}</td>
+                            <td class="py-1">{{ item.remarks or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-3">  <!-- Reduced top margin -->
+                <a href="{{ url_for('view_requisitions') }}" class="btn btn-secondary btn-sm">  <!-- Smaller button -->
+                    Back to Requisitions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
