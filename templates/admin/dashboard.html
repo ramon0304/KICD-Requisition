@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Dashboard Overview</h2>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Users</h5>
+                <h2 class="card-text">{{ total_users }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Requisitions</h5>
+                <h2 class="card-text">{{ total_requisitions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending Requisitions</h5>
+                <h2 class="card-text">{{ pending_requisitions }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Recent Requisitions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Office</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_requisitions %}
+                            <tr>
+                                <td><a href="{{ url_for('admin_requisitions', status='all') }}#req-{{ req.id }}">#{{
+                                        req.id }}</a></td>
+                                <td>{{ req.office_name }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if req.status == 'Approved' %}success{% elif req.status == 'Rejected' %}danger{% else %}warning{% endif %}">
+                                        {{ req.status }}
+                                    </span>
+                                </td>
+                                <td>{{ req.date_created.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Frequently Requested Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Total Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in frequent_items %}
+                            <tr>
+                                <td>{{ item.item_name }}</td>
+                                <td>{{ item.total_quantity }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

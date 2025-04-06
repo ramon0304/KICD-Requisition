@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Requisitions{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Manage Requisitions</h2>
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('admin_requisitions', status='all') }}"
+            class="btn btn-outline-secondary {% if status == 'all' %}active{% endif %}">
+            All
+        </a>
+        <a href="{{ url_for('admin_requisitions', status='pending') }}"
+            class="btn btn-outline-warning {% if status == 'pending' %}active{% endif %}">
+            Pending
+        </a>
+        <a href="{{ url_for('admin_requisitions', status='approved') }}"
+            class="btn btn-outline-success {% if status == 'approved' %}active{% endif %}">
+            Approved
+        </a>
+        <a href="{{ url_for('admin_requisitions', status='rejected') }}"
+            class="btn btn-outline-danger {% if status == 'rejected' %}active{% endif %}">
+            Rejected
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Office</th>
+                        <th>Requested By</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requisitions %}
+                    <tr id="req-{{ req.id }}">
+                        <td>{{ req.id }}</td>
+                        <td>{{ req.office_name }}</td>
+                        <td>{{ req.requested_by }}</td>
+                        <td>
+                            <ul class="mb-0">
+                                {% for item in req.items %}
+                                <li>{{ item.item_name }} ({{ item.quantity }} {{ item.unit }})</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <span
+                                class="badge bg-{% if req.status == 'Approved' %}success{% elif req.status == 'Rejected' %}danger{% else %}warning{% endif %}">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                        <td>{{ req.date_created.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if req.status == 'Pending' %}
+                            <div class="btn-group btn-group-sm">
+                                <form method="POST"
+                                    action="{{ url_for('admin_requisition_action', req_id=req.id, action='approve') }}">
+                                    <button type="submit" class="btn btn-success">Approve</button>
+                                </form>
+                                <form method="POST"
+                                    action="{{ url_for('admin_requisition_action', req_id=req.id, action='reject') }}">
+                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

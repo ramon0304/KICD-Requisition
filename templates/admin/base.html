@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - {% block title %}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background-color: #343a40;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 d-none d-md-block sidebar p-0">
+                <div class="p-3 text-white">
+                    <h4>KICD Admin</h4>
+                    <hr class="bg-light">
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" 
+                           href="{{ url_for('admin_dashboard') }}">
+                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin_requisitions' %}active{% endif %}" 
+                           href="{{ url_for('admin_requisitions') }}">
+                            <i class="bi bi-file-earmark-text me-2"></i>Requisitions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}" 
+                           href="{{ url_for('admin_users') }}">
+                            <i class="bi bi-people me-2"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item mt-3">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-left me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Main content -->
+            <main class="col-md-10 ms-sm-auto p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
