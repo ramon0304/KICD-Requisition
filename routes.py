@@ -9,7 +9,7 @@ from flask import (
     jsonify
 )
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from sqlalchemy.exc import (
     IntegrityError,
     DataError,
@@ -31,10 +31,12 @@ from flask_login import (
 )
 
 from app import create_app, db, login_manager, bcrypt
-from datetime import datetime
 from models import User, Requisition, RequisitionItems, Approval  
 from forms import login_form, register_form, OfficeDetailsForm, ItemsForm, ApprovalForm
 from pdf import generate_pdf
+
+from functools import wraps
+from sqlalchemy import func, desc
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -244,6 +246,110 @@ def validate_email(email):
     import re
     regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
     return re.match(regex, email) is not None
+
+# Admin decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash("You don't have permission to access this page", "danger")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# Admin dashboard
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_dashboard():
+    # Get statistics
+    total_users = User.query.count()
+    total_requisitions = Requisition.query.count()
+    pending_requisitions = Requisition.query.filter_by(status="Pending").count()
+    
+    # Get recent requisitions
+    recent_requisitions = Requisition.query.order_by(Requisition.date_created.desc()).limit(5).all()
+    
+    # Get frequently requested items
+    frequent_items = db.session.query(
+        RequisitionItems.item_name,
+        func.sum(RequisitionItems.quantity).label('total_quantity')
+    ).group_by(RequisitionItems.item_name).order_by(desc('total_quantity')).limit(5).all()
+    
+    return render_template("admin/dashboard.html",
+        total_users=total_users,
+        total_requisitions=total_requisitions,
+        pending_requisitions=pending_requisitions,
+        recent_requisitions=recent_requisitions,
+        frequent_items=frequent_items
+    )
+
+
+# Admin users management
+@app.route("/admin/users")
+@login_required
+@admin_required
+def admin_users():
+    users = User.query.order_by(User.username).all()
+    return render_template("admin/users.html", users=users)
+
+
+# Admin requisitions management
+@app.route("/admin/requisitions")
+@login_required
+@admin_required
+def admin_requisitions():
+    status = request.args.get('status', 'all')
+    
+    query = Requisition.query
+    
+    if status == 'pending':
+        query = query.filter_by(status="Pending")
+    elif status == 'approved':
+        query = query.filter_by(status="Approved")
+    elif status == 'rejected':
+        query = query.filter_by(status="Rejected")
+    
+    requisitions = query.order_by(Requisition.date_created.desc()).all()
+    
+    return render_template("admin/requisitions.html", 
+                         requisitions=requisitions,
+                         status=status)
+
+
+# Approve/Reject requisition
+@app.route("/admin/requisition/<int:req_id>/<action>", methods=["POST"])
+@login_required
+@admin_required
+def admin_requisition_action(req_id, action):
+    requisition = Requisition.query.get_or_404(req_id)
+    
+    if action == "approve":
+        requisition.status = "Approved"
+        flash("Requisition approved successfully", "success")
+    elif action == "reject":
+        requisition.status = "Rejected"
+        flash("Requisition rejected", "info")
+    else:
+        flash("Invalid action", "danger")
+        return redirect(url_for('admin_requisitions'))
+    
+    # Add approval record
+    approval = Approval(
+        requisition_id=requisition.id,
+        approver_name=current_user.username,
+        role="Admin",
+        status=requisition.status,
+        date_signed=datetime.utcnow()
+    )
+    db.session.add(approval)
+    db.session.commit()
+    
+    return redirect(url_for('admin_requisitions'))
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
