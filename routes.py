@@ -33,10 +33,21 @@ from flask_login import (
 from app import create_app, db, login_manager, bcrypt
 from models import User, Requisition, RequisitionItems, Approval  
 from forms import login_form, register_form, OfficeDetailsForm, ItemsForm, ApprovalForm
-from pdf import generate_pdf
 
 from functools import wraps
 from sqlalchemy import func, desc
+
+from flask_chartjs import ChartJS, BaseChart
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet
+import io
+import matplotlib.pyplot as plt
+import seaborn as sns
+from dateutil.relativedelta import relativedelta
+
+# Initialize ChartJS
+chartjs = ChartJS(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -49,10 +60,14 @@ def session_handler():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=1)
 
+
+# home route
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
     return render_template("index.html", title="Home")
 
+
+# login route
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
 def login():
     form = login_form()
@@ -75,6 +90,8 @@ def login():
         btn_action="Login"
         )
 
+
+# user registration
 @app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
 def register():
     form = register_form()
@@ -120,6 +137,8 @@ def register():
         btn_action="Register account"
         )
 
+
+# user logout
 @app.route("/logout")
 @login_required
 def logout():
@@ -349,7 +368,196 @@ def admin_requisition_action(req_id, action):
     return redirect(url_for('admin_requisitions'))
 
 
+# Admin statistics with charts
+@app.route("/admin/statistics")
+@login_required
+@admin_required
+def admin_statistics():
+    # Date range for statistics (last 30 days)
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=30)
+    
+    # Requisitions by status
+    status_data = db.session.query(
+        Requisition.status,
+        func.count(Requisition.id).label('count')
+    ).group_by(Requisition.status).all()
+    
+    # Requisitions by day
+    daily_data = db.session.query(
+        func.date(Requisition.date_created).label('date'),
+        func.count(Requisition.id).label('count')
+    ).filter(Requisition.date_created >= start_date)\
+     .group_by(func.date(Requisition.date_created))\
+     .order_by(func.date(Requisition.date_created)).all()
+    
+    # Top requested items
+    top_items = db.session.query(
+        RequisitionItems.item_name,
+        func.sum(RequisitionItems.quantity).label('total')
+    ).group_by(RequisitionItems.item_name)\
+     .order_by(func.sum(RequisitionItems.quantity).desc())\
+     .limit(10).all()
+    
+    return render_template("admin/statistics.html",
+        status_data=status_data,
+        daily_data=daily_data,
+        top_items=top_items,
+        start_date=start_date.date(),
+        end_date=end_date.date()
+    )
 
+
+# Generate PDF report
+@app.route("/admin/report/pdf")
+@login_required
+@admin_required
+def generate_pdf_report():
+    # Create a file-like buffer to receive PDF data
+    buffer = io.BytesIO()
+    
+    # Create the PDF object
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    Story = []
+    
+    # Add title
+    Story.append(Paragraph("KICD Requisition System Report", styles['Title']))
+    Story.append(Spacer(1, 12))
+    
+    # Generate and add charts
+    charts = generate_chart_images()
+    for chart in charts:
+        Story.append(Paragraph(chart['title'], styles['Heading2']))
+        Story.append(Spacer(1, 12))
+        Story.append(Image(chart['image'], width=400, height=300))
+        Story.append(Spacer(1, 24))
+    
+    # Add summary statistics
+    total_users = User.query.count()
+    total_requisitions = Requisition.query.count()
+    
+    Story.append(Paragraph("Summary Statistics", styles['Heading2']))
+    Story.append(Spacer(1, 12))
+    Story.append(Paragraph(f"Total Users: {total_users}", styles['Normal']))
+    Story.append(Paragraph(f"Total Requisitions: {total_requisitions}", styles['Normal']))
+    
+    # Build the PDF
+    doc.build(Story)
+    
+    # File response
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"kicd_report_{datetime.now().date()}.pdf",
+        mimetype='application/pdf'
+    )
+
+def generate_chart_images():
+    charts = []
+    
+    # Chart 1: Requisitions by Status (Pie)
+    status_data = db.session.query(
+        Requisition.status,
+        func.count(Requisition.id).label('count')
+    ).group_by(Requisition.status).all()
+    
+    labels = [item[0] for item in status_data]
+    sizes = [item[1] for item in status_data]
+    
+    plt.figure(figsize=(6, 6))
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.axis('equal')
+    plt.title('Requisitions by Status')
+    
+    img_buffer = io.BytesIO()
+    plt.savefig(img_buffer, format='png')
+    plt.close()
+    img_buffer.seek(0)
+    
+    charts.append({
+        'title': 'Requisitions by Status',
+        'image': img_buffer
+    })
+    
+    # Chart 2: Daily Requisitions (Line)
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=30)
+    
+    daily_data = db.session.query(
+        func.date(Requisition.date_created).label('date'),
+        func.count(Requisition.id).label('count')
+    ).filter(Requisition.date_created >= start_date)\
+     .group_by(func.date(Requisition.date_created))\
+     .order_by(func.date(Requisition.date_created)).all()
+    
+    dates = [item[0] for item in daily_data]
+    counts = [item[1] for item in daily_data]
+    
+    plt.figure(figsize=(8, 4))
+    sns.lineplot(x=dates, y=counts)
+    plt.title('Daily Requisitions (Last 30 Days)')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Requisitions')
+    plt.xticks(rotation=45)
+    
+    img_buffer = io.BytesIO()
+    plt.savefig(img_buffer, format='png', bbox_inches='tight')
+    plt.close()
+    img_buffer.seek(0)
+    
+    charts.append({
+        'title': 'Daily Requisitions Trend',
+        'image': img_buffer
+    })
+    
+    return charts
+
+
+# Add this to your existing admin routes
+@app.route("/admin/requisitions/export")
+@login_required
+@admin_required
+def export_requisitions():
+    status = request.args.get('status', 'all')
+    
+    query = Requisition.query
+    
+    if status == 'pending':
+        query = query.filter_by(status="Pending")
+    elif status == 'approved':
+        query = query.filter_by(status="Approved")
+    elif status == 'rejected':
+        query = query.filter_by(status="Rejected")
+    
+    requisitions = query.order_by(Requisition.date_created.desc()).all()
+    
+    # Generate CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        'ID', 'Office', 'Requested By', 'Email', 
+        'Status', 'Date Created', 'Items Count'
+    ])
+    
+    # Write data
+    for req in requisitions:
+        writer.writerow([
+            req.id, req.office_name, req.requested_by, req.user_email,
+            req.status, req.date_created.strftime('%Y-%m-%d'), len(req.items)
+        ])
+    
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment;filename=requisitions_{status}_{datetime.now().date()}.csv"
+        }
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
