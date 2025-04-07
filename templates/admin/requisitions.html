@@ -5,6 +5,18 @@
 {% block content %}
 <h2 class="mb-4">Manage Requisitions</h2>
 
+<!-- Add to your requisitions.html -->
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('export_requisitions', status=status) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-download"></i> Export as CSV
+        </a>
+        <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+</div>
+
 <div class="mb-3">
     <div class="btn-group" role="group">
         <a href="{{ url_for('admin_requisitions', status='all') }}"
