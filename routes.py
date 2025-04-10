@@ -422,14 +422,18 @@ def admin_statistics():
     
     item_names = [item[0] for item in top_items]
     item_quantities = [item[1] for item in top_items]
+
+    print("Status data sample:", status_data[:3])  # First 3 items
+    print("Daily data sample:", daily_data[:3])
+    print("Top items sample:", top_items[:3])
     
     return render_template("admin/statistics.html",
-        status_labels=json.dumps([item[0] for item in status_data]),
-        status_counts=json.dumps([item[1] for item in status_data]),
-        daily_dates=json.dumps([item[0].strftime('%Y-%m-%d') for item in daily_data]),
-        daily_counts=json.dumps([item[1] for item in daily_data]),
-        item_names=json.dumps([item[0] for item in top_items]),
-        item_quantities=json.dumps([item[1] for item in top_items]),
+        status_labels=json.dumps([str(item[0]) for item in status_data]), 
+        status_counts=json.dumps([int(item[1]) for item in status_data]),
+        daily_dates=json.dumps([item[0].strftime('%b %d') for item in daily_data]),
+        daily_counts=json.dumps([int(item[1]) for item in daily_data]),
+        item_names=json.dumps([str(item[0]) for item in top_items]),
+        item_quantities=json.dumps([int(item[1]) for item in top_items]),
         start_date=start_date.date(),
         end_date=end_date.date(),
         total_users=total_users,
