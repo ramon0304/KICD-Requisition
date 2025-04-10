@@ -37,7 +37,6 @@ from forms import login_form, register_form, OfficeDetailsForm, ItemsForm, Appro
 from functools import wraps
 from sqlalchemy import func, desc
 
-from flask_chartjs import ChartJS, BaseChart
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
@@ -45,9 +44,8 @@ import io
 import matplotlib.pyplot as plt
 import seaborn as sns
 from dateutil.relativedelta import relativedelta
+import json
 
-# Initialize ChartJS
-chartjs = ChartJS(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -277,7 +275,6 @@ def admin_required(f):
     return decorated_function
 
 
-# Admin dashboard
 @app.route("/admin")
 @login_required
 @admin_required
@@ -290,11 +287,27 @@ def admin_dashboard():
     # Get recent requisitions
     recent_requisitions = Requisition.query.order_by(Requisition.date_created.desc()).limit(5).all()
     
-    # Get frequently requested items
-    frequent_items = db.session.query(
+    # Get frequently requested items with last request date
+    frequent_items = []
+    top_items = db.session.query(
         RequisitionItems.item_name,
         func.sum(RequisitionItems.quantity).label('total_quantity')
-    ).group_by(RequisitionItems.item_name).order_by(desc('total_quantity')).limit(5).all()
+    ).group_by(RequisitionItems.item_name)\
+     .order_by(desc('total_quantity'))\
+     .limit(5).all()
+    
+    for item in top_items:
+        last_req = db.session.query(Requisition.date_created)\
+            .join(RequisitionItems)\
+            .filter(RequisitionItems.item_name == item.item_name)\
+            .order_by(Requisition.date_created.desc())\
+            .first()
+        
+        frequent_items.append({
+            'item_name': item.item_name,
+            'total_quantity': item.total_quantity,
+            'last_request': last_req[0].strftime('%m/%d') if last_req else 'N/A'
+        })
     
     return render_template("admin/dashboard.html",
         total_users=total_users,
@@ -373,6 +386,10 @@ def admin_requisition_action(req_id, action):
 @login_required
 @admin_required
 def admin_statistics():
+    total_users = User.query.count()
+    total_requisitions = Requisition.query.count()
+    pending_requisitions = Requisition.query.filter_by(status="Pending").count()
+
     # Date range for statistics (last 30 days)
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=30)
@@ -383,13 +400,17 @@ def admin_statistics():
         func.count(Requisition.id).label('count')
     ).group_by(Requisition.status).all()
     
-    # Requisitions by day
+    # Requisitions by day - query as datetime objects first
     daily_data = db.session.query(
-        func.date(Requisition.date_created).label('date'),
+        Requisition.date_created,  # Query the datetime directly
         func.count(Requisition.id).label('count')
     ).filter(Requisition.date_created >= start_date)\
      .group_by(func.date(Requisition.date_created))\
      .order_by(func.date(Requisition.date_created)).all()
+    
+    # Now we can format the dates
+    daily_dates = [item[0].strftime('%Y-%m-%d') for item in daily_data]
+    daily_counts = [item[1] for item in daily_data]
     
     # Top requested items
     top_items = db.session.query(
@@ -399,12 +420,21 @@ def admin_statistics():
      .order_by(func.sum(RequisitionItems.quantity).desc())\
      .limit(10).all()
     
+    item_names = [item[0] for item in top_items]
+    item_quantities = [item[1] for item in top_items]
+    
     return render_template("admin/statistics.html",
-        status_data=status_data,
-        daily_data=daily_data,
-        top_items=top_items,
+        status_labels=json.dumps([item[0] for item in status_data]),
+        status_counts=json.dumps([item[1] for item in status_data]),
+        daily_dates=json.dumps([item[0].strftime('%Y-%m-%d') for item in daily_data]),
+        daily_counts=json.dumps([item[1] for item in daily_data]),
+        item_names=json.dumps([item[0] for item in top_items]),
+        item_quantities=json.dumps([item[1] for item in top_items]),
         start_date=start_date.date(),
-        end_date=end_date.date()
+        end_date=end_date.date(),
+        total_users=total_users,
+        total_requisitions=total_requisitions,
+        pending_requisitions=pending_requisitions
     )
 
 

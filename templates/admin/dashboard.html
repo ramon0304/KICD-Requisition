@@ -114,13 +114,7 @@
                             <tr>
                                 <td>{{ item.item_name }}</td>
                                 <td>{{ item.total_quantity }}</td>
-                                <td>
-                                    {% set last_req = RequisitionItems.query.filter_by(item_name=item.item_name)
-                                    .join(Requisition)
-                                    .order_by(Requisition.date_created.desc())
-                                    .first() %}
-                                    {{ last_req.requisition.date_created.strftime('%m/%d') if last_req else 'N/A' }}
-                                </td>
+                                <td>{{ item.last_request }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

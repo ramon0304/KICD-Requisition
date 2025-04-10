@@ -51,12 +51,12 @@
         <h5>Data Range: {{ start_date }} to {{ end_date }}</h5>
     </div>
     <div class="card-body">
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-md-4">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-primary">
                     <div class="card-body">
                         <h5 class="card-title">Total Users</h5>
-                        <h2 class="card-text">{{ User.query.count() }}</h2>
+                        <h2 class="card-text">{{ total_users }}</h2>
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                 <div class="card text-white bg-success">
                     <div class="card-body">
                         <h5 class="card-title">Total Requisitions</h5>
-                        <h2 class="card-text">{{ Requisition.query.count() }}</h2>
+                        <h2 class="card-text">{{ total_requisitions }}</h2>
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                 <div class="card text-white bg-warning">
                     <div class="card-body">
                         <h5 class="card-title">Pending Requisitions</h5>
-                        <h2 class="card-text">{{ Requisition.query.filter_by(status='Pending').count() }}</h2>
+                        <h2 class="card-text">{{ pending_requisitions }}</h2>
                     </div>
                 </div>
             </div>
