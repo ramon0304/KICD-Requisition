@@ -38,6 +38,24 @@
     </div>
 </div>
 
+<h5>Filter by Department</h5>
+<div class="col-md-6">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="departmentDropdown"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            {% if department == 'all' %}All Departments{% else %}{{ department }}{% endif %}
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="departmentDropdown">
+            <li><a class="dropdown-item {% if department == 'all' %}active{% endif %}"
+                    href="{{ url_for('admin_requisitions', status=status, department='all') }}">All Departments</a></li>
+            {% for dept in departments %}
+            <li><a class="dropdown-item {% if department == dept %}active{% endif %}"
+                    href="{{ url_for('admin_requisitions', status=status, department=dept) }}">{{ dept }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
