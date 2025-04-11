@@ -6,7 +6,8 @@ from flask import (
     url_for,
     session,
     request,
-    jsonify
+    jsonify,
+    send_file
 )
 
 from datetime import timedelta, datetime
@@ -38,8 +39,9 @@ from functools import wraps
 from sqlalchemy import func, desc
 
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -450,7 +452,6 @@ def admin_statistics():
 # Generate PDF report
 @app.route("/admin/report/pdf")
 @login_required
-@admin_required
 def generate_pdf_report():
     # Create a file-like buffer to receive PDF data
     buffer = io.BytesIO()
@@ -458,9 +459,30 @@ def generate_pdf_report():
     # Create the PDF object
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
-    Story = []
     
-    # Add title
+    # Define custom styles FIRST before using them
+    styles.add(ParagraphStyle(
+        name='ReportTitle',
+        parent=styles['Title'],
+        fontSize=16,
+        spaceAfter=20,
+        alignment=1,  # 1=TA_CENTER
+        textColor='#003366',  # Dark blue
+        fontName='Helvetica-Bold'
+    ))
+    
+    Story = []
+
+    # Cover Page
+    Story.append(Paragraph("KICD OFFICIAL REPORT", styles['ReportTitle']))
+    Story.append(Spacer(1, 120))
+    Story.append(Paragraph("Requisition System Analytics", styles['Title']))
+    Story.append(Spacer(1, 60))
+    Story.append(Paragraph(f"Report generated on {datetime.now().strftime('%B %d, %Y')}", 
+                        styles['Normal']))
+    Story.append(PageBreak()) 
+
+    # Report Content
     Story.append(Paragraph("KICD Requisition System Report", styles['Title']))
     Story.append(Spacer(1, 12))
     
@@ -472,14 +494,35 @@ def generate_pdf_report():
         Story.append(Image(chart['image'], width=400, height=300))
         Story.append(Spacer(1, 24))
     
-    # Add summary statistics
+    # Add summary statistics table
     total_users = User.query.count()
     total_requisitions = Requisition.query.count()
     
     Story.append(Paragraph("Summary Statistics", styles['Heading2']))
     Story.append(Spacer(1, 12))
-    Story.append(Paragraph(f"Total Users: {total_users}", styles['Normal']))
-    Story.append(Paragraph(f"Total Requisitions: {total_requisitions}", styles['Normal']))
+
+    data = [
+        ['Metric', 'Value'],
+        ['Total Users', total_users],
+        ['Total Requisitions', total_requisitions],
+        ['Pending Requisitions', Requisition.query.filter_by(status="Pending").count()]
+    ]
+
+    t = Table(data)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+        ('BACKGROUND', (0,1), (-1,-1), colors.lightgrey),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('BOX', (0,0), (-1,-1), 1, colors.black)
+    ]))
+
+    Story.append(t)
+    Story.append(Spacer(1, 24))
     
     # Build the PDF
     doc.build(Story)
