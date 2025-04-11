@@ -125,3 +125,35 @@ html, body {
     color: white;
     text-decoration: none;
 }
+
+
+
+.hero-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: calc(100vh - 80px);
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-image-container {
+    transition: transform 0.3s ease;
+}
+
+.hero-image-container:hover {
+    transform: translateY(-5px);
+}
+
+.navbar {
+    transition: all 0.3s ease;
+}
+
+.navbar.scrolled {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+

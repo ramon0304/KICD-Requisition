@@ -3,54 +3,255 @@
 
 {% block content %}
 
-<div class="full-width-header"></div>
-    <header class="d-flex" style="height: 60px;">
-        <a href="/" style="text-decoration: none; color: white;"><h1 style="font-size: 24px; margin: 0;">KICD Requisition System</h1></a>
-        {% if current_user.is_authenticated %}
-        <div class="d-flex justify-content-end align-items-center" style="gap: 20px;">
-            <div style="padding-bottom: 15px;">
-                <a href="{{ url_for('view_requisitions') }}" class="requisitions-btn btn-md">
-                    <i class="fas fa-clipboard-list me-1"></i> My Requisitions
+<!-- Modern Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="fas fa-boxes me-2"></i>
+            <span class="fw-bold">KICD Requisition System</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="ms-auto d-flex align-items-center">
+                {% if current_user.is_authenticated %}
+                <div class="d-flex align-items-center" style="gap: 15px;">
+                    <a href="{{ url_for('view_requisitions') }}" class="btn btn-outline-light mb-2">
+                        <i class="fas fa-clipboard-list me-1"></i> My Requisitions
+                    </a>
+
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle d-flex align-items-center py-2 px-3 mb-2" type="button" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                        <span class="fw-medium">{{ current_user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2 px-3" href="#" style="transition: all 0.2s ease;">
+                                <i class="fas fa-user me-3 text-muted" style="width: 20px;"></i>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider my-1 mx-3">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2 px-3" href="{{ url_for('logout') }}"
+                                style="transition: all 0.2s ease;">
+                                <i class="fas fa-sign-out-alt me-3 text-danger" style="width: 20px;"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                </div>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-light mb-4">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
                 </a>
+                {% endif %}
             </div>
-            <h4 style="margin: 0;">Welcome, {{ current_user.username }}</h4>
-            <div style="padding-bottom: 15px;">
-                <a href="{{ url_for('logout') }}" class="logout-btn btn-md">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section with Gradient Background -->
+<section class="hero-section" style="padding-top: 80px;">
+    <div class="container py-5">
+        {% if current_user.is_authenticated %}
+        <!-- Enhanced Requisition Form Container -->
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-paper-plane me-2"></i> New Requisition</h4>
+            </div>
+            <div class="card-body p-4">
+                {% include "requisitionForm.html" %}
             </div>
         </div>
         {% else %}
-
-        <a href="{{ url_for('login') }}" class="get-started">Get Started</a>
+        <!-- Modern Hero Content -->
+        <div class="row align-items-center g-5 py-5">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Streamline Your Store Operations</h1>
+                <p class="lead mb-4">
+                    Our intuitive requisition system helps you manage inventory requests,
+                    track approvals, and optimize supply chain workflows with ease.
+                </p>
+                <div class="d-grid gap-3 d-sm-flex">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4 gap-3">
+                        <i class="fas fa-sign-in-alt me-2"></i> Get Started
+                    </a>
+                    <a href="#features" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="fas fa-info-circle me-2"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image-container position-relative">
+                    <img src="https://www.cflowapps.com/wp-content/uploads/2024/04/purchase-requisition.jpg"
+                        alt="Inventory Management" class="img-fluid rounded-3 shadow-lg">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 rounded-3"></div>
+                </div>
+            </div>
+        </div>
         {% endif %}
-    </header>
+    </div>
+</section>
 
+{% if not current_user.is_authenticated %}
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Powerful Features</h2>
+            <p class="lead text-muted">Everything you need for efficient requisition management</p>
+        </div>
 
-   <!-- Hero Section -->
-    <div class="hero d-flex align-items-center justify-content-center text-center" style="min-height: 70vh;">>
-        <div class="container">
-            {% if current_user.is_authenticated %}
-                <!-- Include Requisition Form -->
-                {% include "requisitionForm.html" %}
-            {% else %}
-                <!-- Unauthenticated User Content -->
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h2 class="display-5 mb-3">Automate Your Store Requisition</h2>
-                        <p class="lead mb-4">
-                            Streamline your store operations with our easy-to-use requisition system. 
-                            Request items, track approvals, and manage inventory seamlessly.
-                        </p>
-                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Sign In to Get Started</a>
-                    </div>
-                    <div class="col-md-6">
-                        <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==" alt="Requisition System Illustration" class="img-fluid rounded shadow">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-opacity-10 text-primary rounded-circle p-3 mb-3 mx-auto">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold">Quick Requests</h5>
+                        <p class="text-muted">Submit requisitions in seconds with our intuitive interface.</p>
                     </div>
                 </div>
-            {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-opacity-10 text-success rounded-circle p-3 mb-3 mx-auto">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold">Real-time Tracking</h5>
+                        <p class="text-muted">Monitor your request status from submission to fulfillment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-opacity-10 text-info rounded-circle p-3 mb-3 mx-auto">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold">Analytics Dashboard</h5>
+                        <p class="text-muted">Gain insights into your requisition patterns and trends.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</section>
 
-<!-- Footer Section -->
+<!-- FAQ Section -->
+<section id="faq" class="py-5">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Frequently Asked Questions</h2>
+            <p class="lead text-muted">Find answers to common questions about our system</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <!-- FAQ Item 1 -->
+                    <div class="accordion-item border-0 shadow-sm mb-3">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                How do I submit a requisition?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                            data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Simply log in to your account and fill out the requisition form with all required
+                                details.
+                                Once submitted, your request will be processed by the appropriate department.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="accordion-item border-0 shadow-sm mb-3">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                How long does approval take?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+                            data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Approval times vary depending on the request type and current workload, but most
+                                standard requisitions are processed within 24-48 hours.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="accordion-item border-0 shadow-sm">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Can I track my requisition status?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+                            data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! Once logged in, you can view all your requisitions and their current status
+                                in the "My Requisitions" section of your dashboard.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-3">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Trusted by Teams</h2>
+            <p class="lead text-muted">What our users say about the system</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <img src="https://randomuser.me/api/portraits/men/59.jpg" class="rounded-circle me-3"
+                                width="60" alt="User">
+                            <div>
+                                <h5 class="mb-0">Samuel Ndegwa</h5>
+                                <p class="text-muted mb-0">Store Manager</p>
+                            </div>
+                        </div>
+                        <p class="lead mb-0">
+                            "The KICD Requisition System has reduced our request processing time by 70%.
+                            The intuitive interface makes it easy for all staff to submit requests without extensive
+                            training."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Modern Footer -->
 <footer class="bg-light text-dark text-center py-4">
     <div class="container">
         <div class="row">
@@ -63,9 +264,9 @@
             <div class="col-md-4 mb-3">
                 <h5 class="mb-3">Quick Links</h5>
                 <ul class="list-unstyled">
-                    <li><a href="#" class="text-dark">Home</a></li>
-                    <li><a href="#" class="text-dark">Features</a></li>
-                    <li><a href="#" class="text-dark">Contact Us</a></li>
+                    <li><a href="/" class="text-dark">Home</a></li>
+                    <li><a href="#features" class="text-dark">Features</a></li>
+                    <li><a href="/" class="text-dark">Contact Us</a></li>
                 </ul>
             </div>
             <div class="col-md-4 mb-3">
@@ -82,5 +283,4 @@
     </div>
 </footer>
 
-</div>
 {% endblock %}
