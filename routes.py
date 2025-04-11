@@ -7,7 +7,8 @@ from flask import (
     session,
     request,
     jsonify,
-    send_file
+    send_file,
+    Response
 )
 
 from datetime import timedelta, datetime
@@ -47,6 +48,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from dateutil.relativedelta import relativedelta
 import json
+import csv
 
 
 @login_manager.user_loader
@@ -75,20 +77,25 @@ def login():
     if form.validate_on_submit():
         try:
             user = User.query.filter_by(email=form.email.data).first()
-            if check_password_hash(user.pwd, form.pwd.data):
+            if user and check_password_hash(user.pwd, form.pwd.data):
                 login_user(user)
-                return redirect(url_for('index'))
+
+                if user.is_admin:
+                    return redirect(url_for('admin_dashboard'))
+                else:
+                    return redirect(url_for('view_requisitions'))
+                
             else:
-                flash("Invalid Username or password!", "danger")
+                flash("Invalid username or password!", "danger")
         except Exception as e:
-            flash(e, "danger")
+            flash(str(e), "danger")  # Convert exception to string
 
     return render_template("auth.html",
         form=form,
         text="Login",
         title="Login",
         btn_action="Login"
-        )
+    )
 
 
 # user registration
@@ -335,6 +342,7 @@ def admin_users():
 @admin_required
 def admin_requisitions():
     status = request.args.get('status', 'all')
+    department = request.args.get('department', 'all')
     
     query = Requisition.query
     
@@ -345,11 +353,21 @@ def admin_requisitions():
     elif status == 'rejected':
         query = query.filter_by(status="Rejected")
     
+
+    if department != 'all':
+        query = query.filter_by(office_name=department)
+    
+    # Get unique departments for dropdown
+    departments = db.session.query(Requisition.office_name).distinct().all()
+    departments = [dept[0] for dept in departments]
+
     requisitions = query.order_by(Requisition.date_created.desc()).all()
     
     return render_template("admin/requisitions.html", 
                          requisitions=requisitions,
-                         status=status)
+                         status=status,
+                         department=department,
+                         departments=departments)
 
 
 # Approve/Reject requisition
