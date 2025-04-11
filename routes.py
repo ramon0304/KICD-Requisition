@@ -399,6 +399,7 @@ def admin_statistics():
         Requisition.status,
         func.count(Requisition.id).label('count')
     ).group_by(Requisition.status).all()
+    status_data = [(row[0], row[1]) for row in status_data] 
     
     # Requisitions by day - query as datetime objects first
     daily_data = db.session.query(
@@ -407,10 +408,12 @@ def admin_statistics():
     ).filter(Requisition.date_created >= start_date)\
      .group_by(func.date(Requisition.date_created))\
      .order_by(func.date(Requisition.date_created)).all()
+    daily_dates = [row[0].strftime('%Y-%m-%d') for row in daily_data]  # Format dates
+    daily_counts = [row[1] for row in daily_data] 
     
     # Now we can format the dates
-    daily_dates = [item[0].strftime('%Y-%m-%d') for item in daily_data]
-    daily_counts = [item[1] for item in daily_data]
+    daily_dates = [date[0].strftime('%Y-%m-%d') for date in daily_data]  
+    daily_counts = [int(count[1]) for count in daily_data]
     
     # Top requested items
     top_items = db.session.query(
@@ -419,21 +422,27 @@ def admin_statistics():
     ).group_by(RequisitionItems.item_name)\
      .order_by(func.sum(RequisitionItems.quantity).desc())\
      .limit(10).all()
+    top_items = [(row[0], row[1]) for row in top_items] 
     
     item_names = [item[0] for item in top_items]
-    item_quantities = [item[1] for item in top_items]
+    item_quantities = [int(qty[1]) for qty in top_items]
 
-    print("Status data sample:", status_data[:3])  # First 3 items
-    print("Daily data sample:", daily_data[:3])
-    print("Top items sample:", top_items[:3])
+    status_labels = [status[0] for status in status_data]
+    status_counts = [int(count[1]) for count in status_data] 
+
+    print("Status data:", status_data)
+    print("Daily data:", list(zip(daily_dates, daily_counts)))
+    print("Top items:", top_items)
     
     return render_template("admin/statistics.html",
-        status_labels=json.dumps([str(item[0]) for item in status_data]), 
-        status_counts=json.dumps([int(item[1]) for item in status_data]),
-        daily_dates=json.dumps([item[0].strftime('%b %d') for item in daily_data]),
-        daily_counts=json.dumps([int(item[1]) for item in daily_data]),
-        item_names=json.dumps([str(item[0]) for item in top_items]),
-        item_quantities=json.dumps([int(item[1]) for item in top_items]),
+        status_data=status_data,
+        item_data=top_items,
+        # status_labels=status_labels,
+        # status_counts=status_counts,
+        daily_dates = daily_dates,
+        daily_counts=daily_counts,
+        # item_names=item_names,
+        # item_quantities=item_quantities,
         start_date=start_date.date(),
         end_date=end_date.date(),
         total_users=total_users,
