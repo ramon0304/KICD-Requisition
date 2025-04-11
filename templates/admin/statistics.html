@@ -4,9 +4,29 @@
 
 {% block scripts %}
 {{ super() }}
+<!-- Load Chart.js only once -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/static/adminstats.js"></script>
 
+<script>
+    // Convert Python data to JavaScript format
+    const chartData = {
+        status: {
+            labels: {{ status_data|map('first')|list|tojson }},
+            counts: {{ status_data|map('last')|list|tojson }}
+        },
+        daily: {
+            dates: {{ daily_dates|tojson }},
+            counts: {{ daily_counts|tojson }}
+        },
+        items: {
+            names: {{ item_data|map('first')|list|tojson }},
+            quantities: {{ item_data|map('last')|list|tojson }}
+        }
+    };
+    console.log("Template chartData:", chartData);  // Verify data
+</script>
+
+<script src="/static/adminstats.js"></script>
 {% endblock %}
 
 {% block content %}
