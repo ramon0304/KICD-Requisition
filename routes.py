@@ -44,6 +44,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Page
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import seaborn as sns
 from dateutil.relativedelta import relativedelta
